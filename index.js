@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require("dotenv");
 const authRouter = require('./routes/auth-routes');
+const categoryRouter = require('./routes/category-routes');
 const connectDB = require('./config/db');
 
 connectDB();
@@ -18,6 +19,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/category', categoryRouter);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
