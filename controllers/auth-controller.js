@@ -1,6 +1,6 @@
 const User = require('../models/user-model');
 const bcrypt = require('bcryptjs');
-const { generateToken } = require('../utils/token');
+const { generateToken , verifyToken} = require('../utils/token');
 
 module.exports.Register = async (req, res) => {
     const { name, email, password } = req.body;
@@ -39,9 +39,25 @@ module.exports.Login = async (req, res) => {
         }
 
         const token = generateToken(user);
-        res.status(200).json({ token });
+        res.status(200).json({ token, user:{ name: user.name, email: user.email, _id: user._id } });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
+    }
+};
+
+module.exports.checkAuthenticated = async (req, res) => {
+    const requiredAuthHeader = req.headers['authorization'];
+    const token = requiredAuthHeader?.split(' ')?.[1];
+    const isAuthenticated =  verifyToken(token);
+    if (isAuthenticated) {
+        res.status(200).json({ 
+            message: 'Valid token', 
+            name: isAuthenticated.name, 
+            email: isAuthenticated.email, 
+            _id: isAuthenticated.id 
+        });
+    } else {
+        res.status(401).json({ message: 'Unauthorized' });
     }
 };
