@@ -1,4 +1,4 @@
-const Expense = require('../models/Expense');
+const Expense = require('../models/expense-model');
 
 module.exports.getExpenses = async (req, res) => {
     const userId = req.userId;

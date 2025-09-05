@@ -16,7 +16,7 @@ module.exports.Register = async (req, res) => {
         await newUser.save();
 
         const token = generateToken(newUser);
-        res.status(201).json({ token });
+        res.status(201).json({ token , user : {name: newUser.name, email: newUser.email, _id: newUser._id}});
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
