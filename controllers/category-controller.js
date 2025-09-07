@@ -1,5 +1,16 @@
 const Category = require('../models/category-model');
 
+module.exports.getCategories = async (req, res) => { 
+    const userId = req.userId;
+    try {
+        const categories = await Category.find({ user: userId });
+        res.status(200).json(categories);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports.createCategory = async (req, res) => {
     const { name } = req.body;
     const userId = req.userId;
