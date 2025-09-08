@@ -1,4 +1,5 @@
-
+const bcrypt = require('bcryptjs');
+const User = require('../models/user-model');
 
 module.exports.updateUser = async (req, res) => {
     let { name , currency, password } = req.body;
@@ -15,7 +16,8 @@ module.exports.updateUser = async (req, res) => {
             userId,
             updates,
             { new: true }
-        );
+        ).select('-password');
+        console.log("Updated user:", updatedUser , userId, updates);
         if (!updatedUser) {
             return res.status(404).json({ message: "User not found" });
         }

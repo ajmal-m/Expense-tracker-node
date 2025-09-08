@@ -39,7 +39,7 @@ module.exports.Login = async (req, res) => {
         }
 
         const token = generateToken(user);
-        res.status(200).json({ token, user:{ name: user.name, email: user.email, _id: user._id } });
+        res.status(200).json({ token, user:{ name: user.name, email: user.email, _id: user._id , currency: user?.currency } });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -55,6 +55,7 @@ module.exports.checkAuthenticated = async (req, res) => {
             message: 'Valid token', 
             name: isAuthenticated.name, 
             email: isAuthenticated.email, 
+            currency: isAuthenticated.currency,
             _id: isAuthenticated.id 
         });
     } else {
