@@ -26,7 +26,7 @@ const expenseSchema = new mongoose.Schema({
     paymentMethod: {
         type: String,
         enum: ['Cards', 'Cash', 'UPI', 'Payment Later'],
-        required: true
+        required: false
     }
 },{ timestamps: true });
 
