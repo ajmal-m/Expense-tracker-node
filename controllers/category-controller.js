@@ -1,4 +1,6 @@
 const Category = require('../models/category-model');
+const Budget = require('../models/budget-model');
+const mongoose = require('mongoose');
 
 module.exports.getCategories = async (req, res) => { 
     const userId = req.userId;
@@ -26,14 +28,21 @@ module.exports.createCategory = async (req, res) => {
 
 module.exports.deleteCategory = async (req, res) => {
     const { id } = req.params;
+    const session = await mongoose.startSession();
     try {
+        session.startTransaction();
         const deletedCategory = await Category.findOneAndDelete({ _id: id });
         if (!deletedCategory) {
             return res.status(404).json({ message: 'Category not found' });
         }
+        await Budget.deleteMany({ category: id });
+        await session.commitTransaction();
+        session.endSession();
         res.status(200).json({ message: 'Category deleted successfully' });
     } catch (error) {
         console.error(error);
+        await session.abortTransaction();
+        session.endSession();
         res.status(500).json({ message: 'Server error' });
     }
 };
