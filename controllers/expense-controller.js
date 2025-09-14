@@ -13,13 +13,15 @@ module.exports.getExpenses = async (req, res) => {
 };
 
 module.exports.createExpense = async (req, res) => {
-    const { amount, date, notes, category, paymentMethod } = req.body;
+    const { amount, day, month, year, notes, category, paymentMethod } = req.body;
     const userId = req.userId;
 
     try {
         const newExpense = new Expense({
             amount,
-            date,
+            day,
+            month,
+            year,
             notes,
             category,
             paymentMethod,
@@ -28,7 +30,6 @@ module.exports.createExpense = async (req, res) => {
         await newExpense.save();
         res.status(201).json(newExpense);
     } catch (error) {
-        console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 };

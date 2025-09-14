@@ -5,9 +5,21 @@ const expenseSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    date: {
-        type: Date,
-        default: Date.now
+    day:{
+        type: Number,
+        required: true,
+        min: 1,
+        max: 31
+    },
+    month:{
+        type: Number,
+        required: true,
+        min: 1,
+        max: 12
+    },
+    year:{
+        type: Number,
+        required: true,
     },
     notes:{
         type: String,
