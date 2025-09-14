@@ -28,7 +28,8 @@ module.exports.createExpense = async (req, res) => {
             user: userId
         });
         await newExpense.save();
-        res.status(201).json(newExpense);
+        const populatedExpense = await Expense.findById(newExpense._id).populate('category');
+        res.status(201).json(populatedExpense);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
@@ -36,11 +37,11 @@ module.exports.createExpense = async (req, res) => {
 
 module.exports.updateExpense = async (req, res) => {
     const { id } = req.params;
-    const { amount, date, notes, category, paymentMethod } = req.body;
+    const { amount, day, month, year, notes, category, paymentMethod } = req.body;
     try {
         const updatedExpense = await Expense.findOneAndUpdate(
             { _id: id },
-            { amount, date, notes, category, paymentMethod },
+            { amount, day, month, year, notes, category, paymentMethod },
             { new: true }
         );
         if (!updatedExpense) {
