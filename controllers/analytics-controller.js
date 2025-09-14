@@ -1,15 +1,33 @@
-const Expense = require('../models/Expense');
+const Expense = require('../models/expense-model');
+const {months} = require('../constant/months');
+const mongoose = require("mongoose");
 
 module.exports.getMonthlyExpense = async (req, res) => {
     const userId = req.userId;
     const currentMonth = new Date().getMonth() + 1;
     const currentMonthYear = new Date().getFullYear();
-    let result = {};
     try {
-        for(let i=1; i<=currentMonth; i++) {
-            const expenses = await Expense.find({ month: i, year: currentMonthYear, user: userId });
-            const totalExpense = expenses.reduce((total, expense) => total + expense.amount, 0);
-            result[i] = totalExpense;
+        const expenses = await Expense.aggregate([
+            { 
+                $match: { 
+                user: new mongoose.Types.ObjectId(userId), 
+                year: currentMonthYear, 
+                month: { $lte: currentMonth } 
+                } 
+            },
+            {
+                $group: {
+                _id: "$month",
+                totalExpense: { $sum: "$amount" }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        const result={};
+
+        for(let expense of expenses){
+            result[months[expense._id]] = expense.totalExpense;
         }
         res.status(200).json(result);
     } catch (error) {
