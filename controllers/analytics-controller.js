@@ -1,4 +1,5 @@
 const Expense = require('../models/expense-model');
+const MonthlyBudget = require('../models/monthly-budget-modal');
 const {months} = require('../constant/months');
 const mongoose = require("mongoose");
 
@@ -83,6 +84,59 @@ module.exports.getMonthlyCategoryWiseExpense = async(req, res) => {
         res.status(200).json({
             expenses: expenses,
             categoryNames: categoryNames
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+}
+
+module.exports.getCurrentMonthExpense = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const currentMonth = new Date().getMonth() + 1;
+        const currentMonthYear = new Date().getFullYear();
+
+        const expense = await Expense.aggregate([
+            {
+                $match:{
+                    user: new mongoose.Types.ObjectId(userId), 
+                    month: currentMonth,
+                    year: currentMonthYear
+                }
+            },
+            {
+                $group:{
+                    _id:null,
+                    expense:{ $sum : "$amount"}
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    expense: 1
+                }
+            }
+        ]);
+
+       const monthlyBudget = await MonthlyBudget.findOne(
+            { user: userId, month: currentMonth, year: currentMonthYear },
+            "amount"
+        );
+
+        const currentMonthTotalExpense = expense[0]?.expense || 0;
+        const currentMonthBudget = monthlyBudget.amount;
+        const spended = Number((currentMonthTotalExpense/currentMonthBudget)*100, 2).toFixed(1);
+        const remains = currentMonthBudget - currentMonthTotalExpense ;
+        const remainPercentage = Number((remains/currentMonthBudget)*100).toFixed(1);
+
+        res.status(200).json({
+            expense: currentMonthTotalExpense,
+            budget: currentMonthBudget,
+            spended: spended,
+            remains: remains,
+            remainPercentage
         });
 
     } catch (error) {
