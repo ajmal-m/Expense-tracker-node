@@ -2,6 +2,7 @@ const Expense = require('../models/expense-model');
 const MonthlyBudget = require('../models/monthly-budget-modal');
 const {months} = require('../constant/months');
 const mongoose = require("mongoose");
+const Budget = require("../models/budget-model");
 
 module.exports.getMonthlyExpense = async (req, res) => {
     const userId = req.userId;
@@ -90,7 +91,89 @@ module.exports.getMonthlyCategoryWiseExpense = async(req, res) => {
         console.log(error);
         res.status(500).json({ message: 'Server error' });
     }
-}
+};
+
+module.exports.budgetVersesExpense =  async ( req, res ) => {
+    try {
+        const userId = req.userId;
+        const currentMonth = new Date().getMonth() + 1;
+        const currentMonthYear = new Date().getFullYear();
+
+
+        const categoryComparison = await Budget.aggregate([
+            {
+                $match: { user: new mongoose.Types.ObjectId(userId) }
+            },
+            {
+                $lookup: {
+                    from: "categories",
+                    localField: "category",
+                    foreignField: "_id",
+                    as: "category"
+                }
+            },
+            { $unwind: "$category" },
+            {
+                $lookup: {
+                    from: "expenses",
+                    let: { categoryId: "$category._id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$category", "$$categoryId"] },
+                                        { $eq: ["$user", new mongoose.Types.ObjectId(userId)] },
+                                        { $eq: ["$month", currentMonth] },
+                                        { $eq: ["$year", currentMonthYear] }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                totalExpense: { $sum: "$amount" }
+                            }
+                        }
+                    ],
+                    as: "expenses"
+                }
+            },
+            {
+                $addFields: {
+                    totalExpense: { $ifNull: [{ $arrayElemAt: ["$expenses.totalExpense", 0] }, 0] },
+                    budgetedAmount: "$amount"
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    categoryName: "$category.name",
+                    budgetedAmount: 1,
+                    totalExpense: 1,
+                    status: {
+                        $cond: [
+                            { $gt: ["$totalExpense", "$budgetedAmount"] },
+                            "Over Budget",
+                            "Under Budget"
+                        ]
+                    }
+                }
+            }
+        ]);
+
+
+
+       res.status(200).json(categoryComparison);
+
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 
 module.exports.getCurrentMonthExpense = async (req, res) => {
     try {
@@ -143,4 +226,4 @@ module.exports.getCurrentMonthExpense = async (req, res) => {
         console.log(error);
         res.status(500).json({ message: 'Server error' });
     }
-}
+};
